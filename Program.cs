@@ -40,11 +40,6 @@ class Program
           /*──────────────────────────────────╮
           │ Handle your custome requests here │
           ╰──────────────────────────────────*/
-          if (request.Path == "hello")
-          {
-            string name = request.GetBody<string>();
-            response.Send($"Hello there, {name}!");
-          }
 
           database.SaveChanges();
         }
@@ -64,12 +59,4 @@ class Database(string name) : DbBase(name)
   /*──────────────────────────────╮
   │ Add your database tables here │
   ╰──────────────────────────────*/
-  public DbSet<User> Users { get; set; }
-}
-
-public class User(string id, string name, int age)
-{
-  [Key] public string Id { get; set; } = id;
-  public string Name { get; set; } = name;
-  public int Age { get; set; } = age;
 }
