@@ -139,7 +139,7 @@ public class Response
       {
         "html" => "text/html; charset=utf-8",
         "js" => "application/javascript",
-        _ => "application/octet-stream",
+        _ => "",
       };
 
       _context.Response.StatusCode = statusCode;
