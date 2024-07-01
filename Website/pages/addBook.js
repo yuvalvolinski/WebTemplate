@@ -16,13 +16,15 @@ let descriptionTextarea = document.getElementById("descriptionTextarea");
 let addButton = document.getElementById("addButton");
 
 addButton.onclick = function () {
-  let title = titleInput.value;
-  let author = authorInput.value;
-  let imageSource = imageSourceInput.value;
-  let description = descriptionTextarea.value;
-  let uploaderId = localStorage.getItem("userId");
+  var book = {
+    Title: titleInput.value,
+    Author: authorInput.value,
+    ImageSource: imageSourceInput.value,
+    Description: descriptionTextarea.value,
+    UploaderId: localStorage.getItem("userId"),
+  };
 
-  send("addBook", [title, author, imageSource, description, uploaderId]);
+  send("addBook", book);
 
   top.location.href = "index.html";
 }

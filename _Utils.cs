@@ -31,7 +31,7 @@ static class Tools
 
 public static class Log
 {
-  public static void PrintException(Exception exception)
+  public static void WriteException(Exception exception)
   {
     var shortened = ShortenException(exception);
 
@@ -64,27 +64,13 @@ public static class Log
   }
 }
 
-public class File
+public class File(string path)
 {
-  public string Path { get; }
-  public byte[] Bytes { get; }
+  public string Path { get; } = path;
 
-  public File(string path)
+  public static bool Exists(string path)
   {
-    Path = path;
-    Bytes = System.IO.File.ReadAllBytes(path);
-  }
-
-  public static File? Read(string path)
-  {
-    if (System.IO.File.Exists(path))
-    {
-      return new File(path);
-    }
-    else
-    {
-      return null;
-    }
+    return System.IO.File.Exists(path);
   }
 }
 
@@ -150,23 +136,6 @@ public class Request
     return _context.Request.AcceptTypes?.Contains("text/html") ?? false;
   }
 
-  // static string TupliseJson(string jsonStr)
-  // {
-  //   var jsonObj = JsonNode.Parse(jsonStr)!.AsObject();
-  //   var tuplisedJsonObj = new JsonObject();
-
-  //   var count = 1;
-  //   foreach (var property in jsonObj)
-  //   {
-  //     tuplisedJsonObj[$"Item{count}"] = property.Value;
-  //     count++;
-  //   }
-
-  //   var tuplisedJsonStr = tuplisedJsonObj.ToJsonString();
-
-  //   return tuplisedJsonStr;
-  // }
-
   static string TupliseArrayJsonStr(string arrayJsonStr)
   {
     var arrayJsonObj = JsonNode.Parse(arrayJsonStr)!.AsArray();
@@ -211,12 +180,12 @@ public class Response
       };
 
       _context.Response.StatusCode = statusCode;
-      _context.Response.OutputStream.Write(file.Bytes);
+      _context.Response.OutputStream.Write(System.IO.File.ReadAllBytes(file.Path));
     }
     else
     {
       string jsonStr = JsonSerializer.Serialize(value, Tools.JsonSerializerOptions);
-      
+
       if (Tools.IsTuple(typeof(T)))
       {
         jsonStr = ArrayifyTupleJsonStr(jsonStr);
@@ -239,7 +208,8 @@ public class Response
 
     var arrJsonObj = new JsonArray();
 
-    foreach (var field in jsonObj) {
+    foreach (var field in jsonObj)
+    {
       arrJsonObj.Add(field.Value!.DeepClone());
     }
 

@@ -2,6 +2,17 @@ h2 {
   margin-left: 40px;
 }
 
+#loggedInDiv {
+
+  padding: 0.1px;
+
+  border-radius: 0 0 15px 15px;
+
+  box-shadow: 0px 3px 15px 0px rgba(0,0,0,0.2);
+
+  /* background-color: #EDF1F5; */
+}
+
 .preview {
   display: flex;
   flex-direction: column;
@@ -49,8 +60,4 @@ h2 {
   box-shadow: 0px 2px 40px -20px rgba(0, 0, 0, 0.75);
   border-radius: 7px;
   display: block;
-}
-
-.hidden {
-  display: none !important;
 }

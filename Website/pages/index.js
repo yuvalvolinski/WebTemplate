@@ -50,8 +50,8 @@ async function generatePreviews() {
   }
 
   for (let i = 0; i < books.length; i++) {
-    let previewA = createPreviewA(books[i]);
-    booksContainer.appendChild(previewA);
+    let previewAnchor = createPreviewAnchor(books[i]);
+    booksContainer.appendChild(previewAnchor);
   }
 }
 
@@ -66,18 +66,18 @@ async function generateSortedPreviews() {
   }
 
   for (let i = 0; i < favorites.length; i++) {
-    let previewA = createPreviewA(favorites[i]);
-    favoritesContainer.appendChild(previewA);
+    let previewAnchor = createPreviewAnchor(favorites[i]);
+    favoritesContainer.appendChild(previewAnchor);
   }
 
   for (let i = 0; i < uploadedByMe.length; i++) {
-    let previewA = createPreviewA(uploadedByMe[i]);
-    uploadedByMeContainer.appendChild(previewA);
+    let previewAnchor = createPreviewAnchor(uploadedByMe[i]);
+    uploadedByMeContainer.appendChild(previewAnchor);
   }
 
   for (let i = 0; i < all.length; i++) {
-    let previewA = createPreviewA(all[i]);
-    allBooksContainer.appendChild(previewA);
+    let previewAnchor = createPreviewAnchor(all[i]);
+    booksContainer.appendChild(previewAnchor);
   }
 }
 
@@ -85,19 +85,19 @@ async function generateSortedPreviews() {
  * @param {Book} book
  * @returns {HTMLAElement} 
  */
-function createPreviewA(book) {
-  let a = document.createElement("a");
-  a.classList.add("preview");
-  a.href = "book.html?bookId=" + book.Id;
+function createPreviewAnchor(book) {
+  let anchor = document.createElement("a");
+  anchor.classList.add("preview");
+  anchor.href = "book.html?bookId=" + book.Id;
 
   let img = document.createElement("img");
   img.classList.add("bookImage");
   img.src = book.ImageSource;
-  a.appendChild(img);
+  anchor.appendChild(img);
 
   let titleDiv = document.createElement("div");
   titleDiv.innerText = book.Title;
-  a.appendChild(titleDiv);
+  anchor.appendChild(titleDiv);
 
-  return a;
+  return anchor;
 }

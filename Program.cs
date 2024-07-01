@@ -21,15 +21,14 @@ class Program
 
       Console.WriteLine($"Recieved a request with the path: {request.Path}");
 
-      var file = File.Read(request.Path);
-
-      if (file != null)
+      if (File.Exists(request.Path))
       {
+        var file = new File(request.Path);
         response.Send(file);
       }
       else if (request.ExpectsHtml())
       {
-        file = File.Read("website/pages/404.html");
+        var file = new File("website/pages/404.html");
         response.Send(file, 404);
       }
       else
@@ -71,16 +70,11 @@ class Program
           {
             var (username, password) = request.GetBody<(string, string)>();
 
-            var users = database.Users.ToArray();
+            var user = database.Users.First(
+              user => user.Username == username && user.Password == password
+            );
 
-            string? userId = null;
-            for (var i = 0; i < users.Length; i++)
-            {
-              if (users[i].Username == username && users[i].Password == password)
-              {
-                userId = users[i].Id;
-              }
-            }
+            var userId = user.Id;
 
             response.Send(userId);
           }
@@ -88,14 +82,11 @@ class Program
           {
             string userId = request.GetBody<string>();
 
-            var user = database.Users.Find(userId);
+            var user = database.Users.Find(userId)!;
 
-            if (user != null)
-            {
-              var username = user.Username;
+            var username = user.Username;
 
-              response.Send(username);
-            }
+            response.Send(username);
           }
           else if (request.Path == "getBooks")
           {
@@ -119,16 +110,25 @@ class Program
           }
           else if (request.Path == "addBook")
           {
-            //contemplate this one
-            var (title, author, imageSource, description, uploaderId) =
-              request.GetBody<(string, string, string, string, string)>();
-
-            var book = new Book(title, author, imageSource, description, uploaderId);
+            var book = request.GetBody<Book>();
 
             database.Books.Add(book);
           }
           else if (request.Path == "getBookInfo")
           {
+            var (userId, bookId) = request.GetBody<(string?, int)>();
+
+            var book = database.Books.Find(bookId)!;
+
+            var uploader = book.Uploader.Username;
+
+            var isFavorite = database.Favorites.Any(
+              favorite => favorite.UserId == userId && favorite.BookId == bookId
+            );
+
+            response.Send((book, uploader, isFavorite));
+          }
+          else if (request.Path == "addToFavorites") {
 
           }
 
@@ -136,7 +136,7 @@ class Program
         }
         catch (Exception exception)
         {
-          Log.PrintException(exception);
+          Log.WriteException(exception);
         }
       }
 
@@ -173,14 +173,14 @@ class Book(
   string uploaderId
 )
 {
-  [Key] public int Id { get; set; }
+  [Key] required public int Id { get; set; }
   public string Title { get; set; } = title;
   public string Author { get; set; } = author;
   public string ImageSource { get; set; } = imageSource;
   public string Description { get; set; } = description;
-  public string UploaderId { get; set; } = uploaderId;
 
-  [ForeignKey("UploaderId")] public User? Uploader { get; set; }
+  public string UploaderId { get; set; } = uploaderId;
+  [ForeignKey("UploaderId")] required public User Uploader { get; set; }
 }
 
 class Favorite(string userId, int bookId)
@@ -188,8 +188,8 @@ class Favorite(string userId, int bookId)
   [Key] public int Id { get; set; }
 
   public string UserId { get; set; } = userId;
-  public int BookId { get; set; } = bookId;
+  [ForeignKey("UserId")] required public User User { get; set; }
 
-  [ForeignKey("UserId")] public User? User { get; set; }
-  [ForeignKey("BookId")] public Book? Book { get; set; }
+  public int BookId { get; set; } = bookId;
+  [ForeignKey("BookId")] required public Book Book { get; set; }
 }

@@ -12,22 +12,22 @@ import { query, send } from "../_utils";
 let title = document.getElementsByTagName("title");
 
 /**@type {HTMLHeadingElement} */
-let titleH1 = document.getElementById("titleH1");
+let titleHeading = document.getElementById("titleHeading");
 
 /**@type {HTMLHeadingElement} */
-let authorH2 = document.getElementById("authorH2");
+let authorHeading = document.getElementById("authorHeading");
 
 /**@type {HTMLImageElement} */
 let coverImg = document.getElementById("coverImg");
 
 /**@type {HTMLHeadingElement} */
-let uploaderH2 = document.getElementById("uploaderH2");
+let uploaderHeading = document.getElementById("uploaderHeading");
 
-/**@type {HTMLButtonElement} */
-let favoriteButton = document.getElementById("favoriteButton");
+/**@type {HTMLDivElement} */
+let favoriteDiv = document.getElementById("favoriteDiv");
 
-/**@type {HTMLButtonElement} */
-let unfavoriteButton = document.getElementById("unfavoriteButton");
+/**@type {HTMLInputElement} */
+let favoriteCheckbox = document.getElementById("favoriteCheckbox");
 
 /**@type {HTMLDivElement} */
 let descriptionDiv = document.getElementById("descriptionDiv");
@@ -38,40 +38,31 @@ let bookId = Number(query.bookId);
 
 appendBook();
 
-
-favoriteButton.onclick = async function () {
-  await send("addToFavorites", [userId, bookId]);
-
-  favoriteButton.disabled = true;
-  unfavoriteButton.disabled = false;
-}
-
-unfavoriteButton.onclick = async function () {
-  await send("removeFromFavorites", [userId, bookId]);
-
-  favoriteButton.disabled = false;
-  unfavoriteButton.disabled = true;
+favoriteCheckbox.onchange = function() {
+  if (favoriteCheckbox.checked) {
+    console.log("checked");
+    send("addToFavorites", [userId, bookId]);
+  }
+  else {
+    send("removeFromFavorites", [userId, bookId]);
+  }
 }
 
 async function appendBook() {
   /**@type {[Book, string, boolean]} */
-  let [book, uploader, isFavorite] = await send("/getBookInfo", bookId);
+  let [book, uploader, isFavorite] = await send("getBookInfo", [userId, bookId]);
 
   document.title = book.Title;
-  titleH1.innerText = book.Title;
-  authorH2.innerText = `by ${book.Author}`;
-  uploaderH2.innerText = `Uploaded by ${uploader}`
+  titleHeading.innerText = book.Title;
+  authorHeading.innerText = `by ${book.Author}`;
+  uploaderHeading.innerText = `Uploaded by ${uploader}`
   coverImg.src = book.ImageSource;
 
-  descriptionDiv.innerText = book.Description;
-
-  if (userId == undefined) {
-    favoriteButton.style.display = "none";
-    unfavoriteButton.style.display = "none";
-    return;
+  if (userId != null) {
+    favoriteDiv.classList.remove("hidden");
+    favoriteCheckbox.checked = isFavorite;
   }
 
-  favoriteButton.disabled = isFavorite;
-  unfavoriteButton.disabled = !isFavorite;
+  descriptionDiv.innerText = book.Description;
 }
 
