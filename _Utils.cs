@@ -70,6 +70,7 @@ public class File(string path)
 
   public static bool Exists(string path)
   {
+    Console.WriteLine("The path is: " + path);
     return System.IO.File.Exists(path);
   }
 }
@@ -172,6 +173,9 @@ public class Response
   {
     if (value is File file)
     {
+      Console.WriteLine("The path is: " + file.Path);
+      var fileBytes = System.IO.File.ReadAllBytes(file.Path);
+
       _context.Response.ContentType = file.Path.Split(".").Last() switch
       {
         "html" => "text/html; charset=utf-8",
@@ -180,7 +184,7 @@ public class Response
       };
 
       _context.Response.StatusCode = statusCode;
-      _context.Response.OutputStream.Write(System.IO.File.ReadAllBytes(file.Path));
+      _context.Response.OutputStream.Write(fileBytes);
     }
     else
     {
