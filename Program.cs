@@ -10,7 +10,7 @@ class Program
 
     var server = new Server(port);
 
-    Console.WriteLine($"The server is running");
+    Console.WriteLine("The server is running");
     Console.WriteLine($"Main Page: http://localhost:{port}/website/pages/index.html");
 
     var database = new Database();
@@ -38,10 +38,6 @@ class Program
           /*──────────────────────────────────╮
           │ Handle your custome requests here │
           ╰──────────────────────────────────*/
-          if (request.Path == "test")
-          {
-            response.Send((1, 2));
-          }
           if (request.Path == "verifyUserId")
           {
             string userId = request.GetBody<string>();
@@ -98,25 +94,26 @@ class Program
           {
             var userId = request.GetBody<string>();
 
-            var all = database.Books.ToArray();
-
             var uploadedByMe = database.Books.Where(book => book.UploaderId == userId);
 
             var favorites = database.Favorites
               .Where(favorite => favorite.UserId == userId)
               .Select(favorite => favorite.Book);
 
-            response.Send((favorites, uploadedByMe, all));
+            response.Send((favorites, uploadedByMe));
           }
           else if (request.Path == "addBook")
           {
-            var book = request.GetBody<Book>();
+            var (title, author, imageSource, description, uploaderId) =
+              request.GetBody<(string, string, string, string, string)>();
+
+            var book = new Book(title, author, imageSource, description, uploaderId);
 
             database.Books.Add(book);
           }
           else if (request.Path == "getBookInfo")
           {
-            var (userId, bookId) = request.GetBody<(string?, int)>();
+            var (userId, bookId) = request.GetBody<(string, int)>();
 
             var book = database.Books.Find(bookId)!;
 
@@ -128,8 +125,22 @@ class Program
 
             response.Send((book, uploader, isFavorite));
           }
-          else if (request.Path == "addToFavorites") {
+          else if (request.Path == "addToFavorites")
+          {
+            var (userId, bookId) = request.GetBody<(string, int)>();
 
+            var favorite = new Favorite(userId, bookId);
+
+            database.Favorites.Add(favorite);
+          }
+          else if (request.Path == "removeFromFavorites") {
+            var (userId, bookId) = request.GetBody<(string, int)>();
+
+            var favorite = database.Favorites.First(
+              favorite => favorite.UserId == userId && favorite.BookId == bookId
+            );
+
+            database.Favorites.Remove(favorite);
           }
 
           database.SaveChanges();
@@ -173,23 +184,23 @@ class Book(
   string uploaderId
 )
 {
-  [Key] required public int Id { get; set; }
+  [Key] public int Id { get; set; } = default!;
   public string Title { get; set; } = title;
   public string Author { get; set; } = author;
   public string ImageSource { get; set; } = imageSource;
   public string Description { get; set; } = description;
 
   public string UploaderId { get; set; } = uploaderId;
-  [ForeignKey("UploaderId")] required public User Uploader { get; set; }
+  [ForeignKey("UploaderId")] public User Uploader { get; set; } = default!;
 }
 
 class Favorite(string userId, int bookId)
 {
-  [Key] public int Id { get; set; }
+  [Key] public int Id { get; set; } = default!;
 
   public string UserId { get; set; } = userId;
-  [ForeignKey("UserId")] required public User User { get; set; }
+  [ForeignKey("UserId")] public User User { get; set; } = default!;
 
   public int BookId { get; set; } = bookId;
-  [ForeignKey("BookId")] required public Book Book { get; set; }
+  [ForeignKey("BookId")] public Book Book { get; set; } = default!;
 }

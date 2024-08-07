@@ -2,17 +2,6 @@ h2 {
   margin-left: 40px;
 }
 
-#loggedInDiv {
-
-  padding: 0.1px;
-
-  border-radius: 0 0 15px 15px;
-
-  box-shadow: 0px 3px 15px 0px rgba(0,0,0,0.2);
-
-  /* background-color: #EDF1F5; */
-}
-
 .preview {
   display: flex;
   flex-direction: column;
@@ -45,7 +34,7 @@ h2 {
 
   color: #2F52A2;
   text-indent: 14px;
-  line-height: 68px;
+  line-height: 66px;
   font-size: 70px;
   font-weight: bold;
   text-decoration: none;

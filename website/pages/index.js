@@ -14,9 +14,6 @@ let noBooksDiv = document.getElementById("noBooksDiv");
 let loggedInDiv = document.getElementById("loggedInDiv");
 
 /**@type {HTMLDivElement} */
-let loggedOutDiv = document.getElementById("loggedOutDiv");
-
-/**@type {HTMLDivElement} */
 let favoritesContainer = document.getElementById("favoritesContainer");
 
 /**@type {HTMLDivElement} */
@@ -31,14 +28,12 @@ let booksContainer = document.getElementById("booksContainer");
 
 let userId = localStorage.getItem("userId");
 
-if (userId == null) {
-  loggedOutDiv.classList.remove("hidden");
-  generatePreviews();
-}
-else {
+if (userId != null) {
   loggedInDiv.classList.remove("hidden");
   generateSortedPreviews();
 }
+
+generatePreviews();
 
 
 async function generatePreviews() {
@@ -46,38 +41,38 @@ async function generatePreviews() {
   let books = await send("getBooks");
 
   if (books.length == 0) {
-    noBooksDiv.classList.remove("hidden");
+    booksContainer.innerText = "There are no books to display yet.";
   }
-
-  for (let i = 0; i < books.length; i++) {
-    let previewAnchor = createPreviewAnchor(books[i]);
-    booksContainer.appendChild(previewAnchor);
+  else {
+    for (let i = 0; i < books.length; i++) {
+      let previewAnchor = createPreviewAnchor(books[i]);
+      booksContainer.appendChild(previewAnchor);
+    }
   }
 }
 
 async function generateSortedPreviews() {
-  /**@type {[Book[], Book[], Book[]]} */
-  let [favorites, uploadedByMe, all] = await send("getSortedBooks", userId);
+  /**@type {[Book[], Book[]]} */
+  let [favorites, uploadedByMe] = await send("getSortedBooks", userId);
 
-  console.log(all);
-
-  if (all.length == 0) {
-    noBooksDiv.classList.remove("hidden");
+  if (favorites.length == 0) {
+    favoritesContainer.innerText = "Your favorite books will be displayed here.";
+  }
+  else {
+    for (let i = 0; i < favorites.length; i++) {
+      let previewAnchor = createPreviewAnchor(favorites[i]);
+      favoritesContainer.appendChild(previewAnchor);
+    }
   }
 
-  for (let i = 0; i < favorites.length; i++) {
-    let previewAnchor = createPreviewAnchor(favorites[i]);
-    favoritesContainer.appendChild(previewAnchor);
+  if (uploadedByMe.length == 0) {
+    uploadedByMeContainer.innerText = "Books you upload will be display here.";
   }
-
-  for (let i = 0; i < uploadedByMe.length; i++) {
-    let previewAnchor = createPreviewAnchor(uploadedByMe[i]);
-    uploadedByMeContainer.appendChild(previewAnchor);
-  }
-
-  for (let i = 0; i < all.length; i++) {
-    let previewAnchor = createPreviewAnchor(all[i]);
-    booksContainer.appendChild(previewAnchor);
+  else {
+    for (let i = 0; i < uploadedByMe.length; i++) {
+      let previewAnchor = createPreviewAnchor(uploadedByMe[i]);
+      uploadedByMeContainer.appendChild(previewAnchor);
+    }
   }
 }
 

@@ -40,7 +40,6 @@ appendBook();
 
 favoriteCheckbox.onchange = function() {
   if (favoriteCheckbox.checked) {
-    console.log("checked");
     send("addToFavorites", [userId, bookId]);
   }
   else {

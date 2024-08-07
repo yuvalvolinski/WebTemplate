@@ -4,8 +4,6 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 
-//testing, delete later 2
-
 static class Tools
 {
   public static JsonSerializerOptions JsonSerializerOptions = new() { IncludeFields = true };
@@ -72,7 +70,6 @@ public class File(string path)
 
   public static bool Exists(string path)
   {
-    Console.WriteLine("The path is: " + path);
     return System.IO.File.Exists(path);
   }
 }
@@ -175,7 +172,6 @@ public class Response
   {
     if (value is File file)
     {
-      Console.WriteLine("The path is: " + file.Path);
       var fileBytes = System.IO.File.ReadAllBytes(file.Path);
 
       _context.Response.ContentType = file.Path.Split(".").Last() switch
@@ -185,7 +181,12 @@ public class Response
         _ => "",
       };
 
+      _context.Response.Headers.Add("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+      _context.Response.Headers.Add("Pragma", "no-cache");
+      _context.Response.Headers.Add("Expires", "Thu, 01 Jan 1970 00:00:00 GMT");
+
       _context.Response.StatusCode = statusCode;
+
       _context.Response.OutputStream.Write(fileBytes);
     }
     else
