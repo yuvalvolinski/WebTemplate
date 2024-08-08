@@ -29,7 +29,8 @@ class Program
       else if (request.ExpectsHtml())
       {
         var file = new File("website/pages/404.html");
-        response.Send(file, 404);
+        response.SetStatusCode(404);
+        response.Send(file);
       }
       else
       {
@@ -133,7 +134,8 @@ class Program
 
             database.Favorites.Add(favorite);
           }
-          else if (request.Path == "removeFromFavorites") {
+          else if (request.Path == "removeFromFavorites")
+          {
             var (userId, bookId) = request.GetBody<(string, int)>();
 
             var favorite = database.Favorites.First(
@@ -141,6 +143,10 @@ class Program
             );
 
             database.Favorites.Remove(favorite);
+          }
+          else
+          {
+            response.SetStatusCode(405);
           }
 
           database.SaveChanges();

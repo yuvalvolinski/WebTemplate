@@ -161,14 +161,9 @@ public class Response
   public Response(HttpListenerContext context)
   {
     _context = context;
-
-    if (_context.Request.Headers.Get("X-Is-Custom") != "true")
-    {
-      _context.Response.StatusCode = 404;
-    }
   }
 
-  public void Send<T>(T value, int statusCode = 200)
+  public void Send<T>(T value)
   {
     if (value is File file)
     {
@@ -185,12 +180,15 @@ public class Response
       _context.Response.Headers.Add("Pragma", "no-cache");
       _context.Response.Headers.Add("Expires", "Thu, 01 Jan 1970 00:00:00 GMT");
 
-      _context.Response.StatusCode = statusCode;
-
       _context.Response.OutputStream.Write(fileBytes);
     }
     else
     {
+      if (_context.Request.Headers.Get("X-Is-Custom") != "true")
+      {
+        _context.Response.StatusCode = 404;
+      }
+
       string jsonStr = JsonSerializer.Serialize(value, Tools.JsonSerializerOptions);
 
       if (Tools.IsTuple(typeof(T)))
@@ -202,6 +200,16 @@ public class Response
       var bytes = Encoding.UTF8.GetBytes(jsonStr);
       _context.Response.OutputStream.Write(bytes);
     }
+  }
+
+  public void Redirect(string path)
+  {
+    _context.Response.Redirect(path);
+  }
+
+  public void SetStatusCode(int statusCode)
+  {
+    _context.Response.StatusCode = statusCode;
   }
 
   public void Close()
