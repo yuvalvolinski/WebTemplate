@@ -170,9 +170,9 @@ class Database() : DbBase("database")
   /*──────────────────────────────╮
   │ Add your database tables here │
   ╰──────────────────────────────*/
-  public DbSet<User> Users { get; set; }
-  public DbSet<Book> Books { get; set; }
-  public DbSet<Favorite> Favorites { get; set; }
+  public DbSet<User> Users { get; set; } = default!;
+  public DbSet<Book> Books { get; set; } = default!;
+  public DbSet<Favorite> Favorites { get; set; } = default!;
 }
 
 class User(string id, string username, string password)
@@ -195,7 +195,6 @@ class Book(
   public string Author { get; set; } = author;
   public string ImageSource { get; set; } = imageSource;
   public string Description { get; set; } = description;
-
   public string UploaderId { get; set; } = uploaderId;
   [ForeignKey("UploaderId")] public User Uploader { get; set; } = default!;
 }
