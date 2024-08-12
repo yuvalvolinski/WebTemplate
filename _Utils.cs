@@ -1,13 +1,37 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.EntityFrameworkCore;
 
-namespace Utils;
+static class Tools
+{
+  public static JsonSerializerOptions JsonSerializerOptions = new() { IncludeFields = true };
+
+  public static bool IsTuple(Type type)
+  {
+    var fields = type.GetFields();
+
+    if (fields.Length == 0)
+    {
+      return false;
+    }
+
+    for (var i = 0; i < fields.Length; i++)
+    {
+      if (fields[i].Name != $"Item{i + 1}")
+      {
+        return false;
+      }
+    }
+
+    return true;
+  }
+}
 
 public static class Log
 {
-  public static void PrintException(Exception exception)
+  public static void WriteException(Exception exception)
   {
     var shortened = ShortenException(exception);
 
@@ -40,27 +64,13 @@ public static class Log
   }
 }
 
-public class File
+public class File(string path)
 {
-  public string Path { get; }
-  public byte[] Bytes { get; }
+  public string Path { get; } = path;
 
-  public File(string path)
+  public static bool Exists(string path)
   {
-    Path = path;
-    Bytes = System.IO.File.ReadAllBytes(path);
-  }
-
-  public static File? Read(string path)
-  {
-    if (System.IO.File.Exists(path))
-    {
-      return new File(path);
-    }
-    else
-    {
-      return null;
-    }
+    return System.IO.File.Exists(path);
   }
 }
 
@@ -95,10 +105,14 @@ public class Request
     _context = context;
 
     Path = _context.Request.Url!.AbsolutePath[1..];
-    if (
-      (_context.Request.UrlReferrer?.AbsolutePath.EndsWith(".js") ?? false) &&
-      !Path.EndsWith(".js")
-    )
+
+    if ((_context.Request.AcceptTypes?.Contains("text/html") ?? false) &&
+      !Path.EndsWith(".html"))
+    {
+      Path += ".html";
+    }
+    if ((_context.Request.UrlReferrer?.AbsolutePath.EndsWith(".js") ?? false) &&
+      !Path.EndsWith(".js"))
     {
       Path += ".js";
     }
@@ -107,13 +121,36 @@ public class Request
   public T GetBody<T>()
   {
     var streamReader = new StreamReader(_context.Request.InputStream, _context.Request.ContentEncoding);
-    var bodyJson = streamReader.ReadToEnd();
-    return JsonSerializer.Deserialize<T>(bodyJson)!;
+    var jsonStr = streamReader.ReadToEnd();
+
+    if (Tools.IsTuple(typeof(T)))
+    {
+      jsonStr = TupliseArrayJsonStr(jsonStr);
+    }
+
+    return JsonSerializer.Deserialize<T>(jsonStr, Tools.JsonSerializerOptions)!;
   }
 
   public bool ExpectsHtml()
   {
     return _context.Request.AcceptTypes?.Contains("text/html") ?? false;
+  }
+
+  static string TupliseArrayJsonStr(string arrayJsonStr)
+  {
+    var arrayJsonObj = JsonNode.Parse(arrayJsonStr)!.AsArray();
+    var tuplisedObj = new JsonObject();
+
+    int count = 1;
+    foreach (var item in arrayJsonObj)
+    {
+      tuplisedObj[$"Item{count}"] = item!.DeepClone();
+      count++;
+    }
+
+    var tuplisedStr = tuplisedObj.ToJsonString();
+
+    return tuplisedStr;
   }
 }
 
@@ -124,17 +161,14 @@ public class Response
   public Response(HttpListenerContext context)
   {
     _context = context;
-
-    if (_context.Request.Headers.Get("X-Is-Custom") != "true")
-    {
-      _context.Response.StatusCode = 404;
-    }
   }
 
-  public void Send<T>(T value, int statusCode = 200)
+  public void Send<T>(T value)
   {
     if (value is File file)
     {
+      var fileBytes = System.IO.File.ReadAllBytes(file.Path);
+
       _context.Response.ContentType = file.Path.Split(".").Last() switch
       {
         "html" => "text/html; charset=utf-8",
@@ -142,20 +176,61 @@ public class Response
         _ => "",
       };
 
-      _context.Response.StatusCode = statusCode;
-      _context.Response.OutputStream.Write(file.Bytes);
+      _context.Response.Headers.Add("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+      _context.Response.Headers.Add("Pragma", "no-cache");
+      _context.Response.Headers.Add("Expires", "Thu, 01 Jan 1970 00:00:00 GMT");
+
+      _context.Response.OutputStream.Write(fileBytes);
     }
     else
     {
-      var json = JsonSerializer.Serialize(new { data = value });
-      var bytes = Encoding.UTF8.GetBytes(json);
+      if (_context.Request.Headers.Get("X-Is-Custom") != "true")
+      {
+        _context.Response.StatusCode = 404;
+      }
+
+      string jsonStr = JsonSerializer.Serialize(value, Tools.JsonSerializerOptions);
+
+      if (Tools.IsTuple(typeof(T)))
+      {
+        jsonStr = ArrayifyTupleJsonStr(jsonStr);
+      }
+
+      jsonStr = $"{{\"data\": {jsonStr}}}";
+      var bytes = Encoding.UTF8.GetBytes(jsonStr);
       _context.Response.OutputStream.Write(bytes);
     }
+  }
+
+  public void Redirect(string path)
+  {
+    _context.Response.Redirect(path);
+  }
+
+  public void SetStatusCode(int statusCode)
+  {
+    _context.Response.StatusCode = statusCode;
   }
 
   public void Close()
   {
     _context.Response.Close();
+  }
+
+  static string ArrayifyTupleJsonStr(string tupleJsonStr)
+  {
+    var jsonObj = JsonNode.Parse(tupleJsonStr)!.AsObject();
+
+    var arrJsonObj = new JsonArray();
+
+    foreach (var field in jsonObj)
+    {
+      arrJsonObj.Add(field.Value!.DeepClone());
+    }
+
+    var arrJsonStr = arrJsonObj.ToJsonString();
+
+    return arrJsonStr;
   }
 }
 
@@ -167,6 +242,7 @@ public class DbBase : DbContext
   {
     _name = name;
 
+    Database.EnsureCreated();
     Database.ExecuteSqlRaw("PRAGMA journal_mode = DELETE;");
   }
 
