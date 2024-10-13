@@ -1,5 +1,5 @@
 # יצירת פרוייקט חדש
-פתחו את תיקיית הפרוייקטים שלכם והריצו את הפקודה הבאה (וודאו להחליף את [your project name]) בשם הפרוייקט שלכם:
+פתחו את תיקיית הפרוייקטים שלכם והריצו את הפקודה הבאה (וודאו להחליף את [your project name] בשם הפרוייקט שלכם):
 ```
 git clone https://github.com/Computer-Engineering-Major-Ort-Ariel/WebTemplate [your project name]
 ```
