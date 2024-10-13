@@ -1,0 +1,14 @@
+{
+  "files.exclude": {
+    ".vscode": true,
+    "**/*.js": true,
+    "tsconfig.json": true,
+    ".gitignore": true,
+    "README.md": true,
+    "Utilities.cs": true,
+    "website/utilities.ts": true,
+    "WebTemplate.csproj": true,
+    "bin": true,
+    "obj": true,
+  }
+}

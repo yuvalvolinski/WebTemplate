@@ -1,9 +1,4 @@
-/**
- * @param {string} path
- * @param {any} body
- * @returns {any}
- */
-export async function send(path, body) {
+export async function send(path: string, body: any): Promise<any> {
   let response = await fetch(
     `/${path}`,
     {
