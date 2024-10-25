@@ -19,5 +19,3 @@ export async function send(path: string, body: any): Promise<any> {
     return null;
   }
 };
-
-export const query = Object.fromEntries(new URLSearchParams(location.search).entries());
