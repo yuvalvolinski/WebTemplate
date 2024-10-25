@@ -175,7 +175,12 @@ public class Response
         {
           var fileText = System.IO.File.ReadAllText(file.Path)!;
           var fileTextParts = fileText.Split("></iframe>");
-          var fileTextNew = string.Join(" frameborder=\"0\" onload=\"let body = this.contentWindow.document.body; body.style.margin = 0; this.width = '100%'; this.height = '100%'; this.width = body.scrollWidth; this.height= body.scrollHeight;\"></iframe>", fileTextParts);
+          var fileTextNew = string.Join(
+            " frameborder=\"0\" onload=\"let body=this.contentWindow.document.body;"
+            + "body.style.margin=0;this.width='100%';this.height='100%';"
+            + "this.width=body.scrollWidth;this.height=body.scrollHeight;\"></iframe>",
+            fileTextParts
+          );
           return Encoding.UTF8.GetBytes(fileTextNew);
         }))(),
         _ => System.IO.File.ReadAllBytes(file.Path)!,
