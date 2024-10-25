@@ -167,9 +167,21 @@ public class Response
   {
     if (value is File file)
     {
-      var fileBytes = System.IO.File.ReadAllBytes(file.Path);
+      var fileExtension = file.Path.Split(".").Last();
 
-      _context.Response.ContentType = file.Path.Split(".").Last() switch
+      var fileBytes = fileExtension switch
+      {
+        "html" => ((Func<Byte[]>)(() =>
+        {
+          var fileText = System.IO.File.ReadAllText(file.Path)!;
+          var fileTextParts = fileText.Split("></iframe>");
+          var fileTextNew = string.Join(" frameborder=\"0\" onload=\"let body = this.contentWindow.document.body; body.style.margin = 0; this.width = '100%'; this.height = '100%'; this.width = body.scrollWidth; this.height= body.scrollHeight;\"></iframe>", fileTextParts);
+          return Encoding.UTF8.GetBytes(fileTextNew);
+        }))(),
+        _ => System.IO.File.ReadAllBytes(file.Path)!,
+      };
+
+      _context.Response.ContentType = fileExtension switch
       {
         "html" => "text/html; charset=utf-8",
         "js" => "application/javascript",
