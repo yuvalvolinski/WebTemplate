@@ -3,6 +3,9 @@ class Program
 {
   static void Main()
   {
+    string [] username = new string[]
+    string [] pasword = new string[]
+
     int port = 5000;
 
     var server = new Server(port);
@@ -23,9 +26,10 @@ class Program
       }
       else if (request.ExpectsHtml())
       {
-        var file = new File("website/pages/404.html");
-        response.SetStatusCode(404);
-        response.Send(file);
+        (string username, string password) = request.GetBody<(string, string)>;
+        username = [..username, username];
+
+    
       }
       else
       {
